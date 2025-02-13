@@ -135,8 +135,8 @@ function getFormattedDates() {
   };
 }
 
-// let fromEmailString=['FROM', 'bunkers@clipperoil.com']
-let fromEmailString=['FROM', 'austinandogola@gmail.com']
+let fromEmailString=['FROM', 'bunkers@clipperoil.com']
+// let fromEmailString=['FROM', 'austinandogola@gmail.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
 // setInterval(() => {
 //   checkEmails();
