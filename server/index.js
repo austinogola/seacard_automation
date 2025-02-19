@@ -135,8 +135,8 @@ function getFormattedDates() {
   };
 }
 
-let fromEmailString=['FROM', 'bunkers@clipperoil.com']
-// let fromEmailString=['FROM', 'austinandogola@gmail.com']
+// let fromEmailString=['FROM', 'bunkers@clipperoil.com']
+let fromEmailString=['FROM', 'austinandogola@gmail.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
 // setInterval(() => {
 //   checkEmails();
@@ -146,7 +146,13 @@ let subJectString='SEA Card® OMSQuote Window Opened'
 //   imap.openBox('INBOX', false, callback);
 // }
 
-let screenShotUrl='http://www.seacardsys.com'
+// let screenShotUrl='https://seacardsys.com/cgi-bin/dashboard'
+let screenShotUrl='https://seacardsys.com/cgi-bin/oms_supp_quote_search'
+function extractQuoteId(subject) {
+  const match = subject.match(/Quote Request ID (\d+)/);
+  return match ? match[1] : null;
+}
+
 function checkEmails() {
   imap.search(["UNSEEN",['SINCE', getFormattedDates().yesterday],fromEmailString], function (err, results) {
     console.log(err)
@@ -169,8 +175,9 @@ function checkEmails() {
             const { from, subject } = parsed;
             if(subject.includes(subJectString)){
               let fromEmail=from.value[0].address
-              console.log(fromEmail, subject)
-              sendMessage(JSON.stringify({getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid}))
+              let quoteId=extractQuoteId(subject)
+              console.log(fromEmail, subject,quoteId)
+              sendMessage(JSON.stringify({getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId}))
               
             }
             
