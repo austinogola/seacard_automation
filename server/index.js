@@ -65,10 +65,10 @@ wss.on('connection',function connections(ws){
     let messageObj=JSON.parse(message)
     if(messageObj.getScrnShot){
 
-      const {imageUrl,email,subject,uid}=messageObj
+      const {imageUrl,email,subject,uid,messageId}=messageObj
       console.log('Received ',email,subject);
       let filePath= saveScreenshot(imageUrl)
-      await sendEmail(filePath,email,subject,uid);
+      await sendEmail(filePath,email,subject,uid,messageId);
     }
     
    
@@ -135,7 +135,8 @@ function getFormattedDates() {
   };
 }
 
-let fromEmailString=['FROM', 'bunkers@clipperoil.com']
+// let fromEmailString=['FROM', 'bunkers@clipperoil.com']
+let fromEmailString=['FROM', 'kevin@clipperoil.com']
 // let fromEmailString=['FROM', 'austinandogola@gmail.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
 // setInterval(() => {
@@ -172,12 +173,13 @@ function checkEmails() {
         msg.on("body", function (stream) {
           simpleParser(stream, async (err, parsed) => {
             if (err) return;
-            const { from, subject } = parsed;
+            const { from, subject,messageId } = parsed;
+            console.log(messageId)
             if(subject.includes(subJectString)){
               let fromEmail=from.value[0].address
               let quoteId=extractQuoteId(subject)
               console.log(fromEmail, subject,quoteId)
-              sendMessage(JSON.stringify({getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId}))
+              sendMessage(JSON.stringify({getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId,messageId}))
               
             }
             
@@ -210,7 +212,7 @@ function saveScreenshot(base64Data) {
   return filePath;
 }
 
-async function sendEmail(attachmentPath,toEmail,subj,uid) {
+async function sendEmail(attachmentPath,toEmail,subj,uid,messageId) {
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -222,10 +224,10 @@ async function sendEmail(attachmentPath,toEmail,subj,uid) {
   let mailOptions = {
     from: process.env.first_email,
     to: toEmail,
+    inReplyTo: messageId,
+    references: messageId,
     subject: `${subj}`,
     html: `
-      <h2>Seacardsys Screenshot</h2>
-      <p>Here is the latest captured screenshot:</p>
       <img src="cid:screenshot_cid" alt="Captured Screenshot" style="max-width: 100%; border: 1px solid #ddd; padding: 5px;"/>
     `,
     attachments: [
