@@ -139,9 +139,9 @@ function getFormattedDates() {
 let fromEmailString=['FROM', 'kevin@clipperoil.com']
 // let fromEmailString=['FROM', 'austinandogola@gmail.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
-// setInterval(() => {
-//   checkEmails();
-// }, 15000);
+setInterval(() => {
+  checkEmails();
+}, 45000);
 
 // function openInbox(callback) {
 //   imap.openBox('INBOX', false, callback);
@@ -225,7 +225,6 @@ async function sendEmail(attachmentPath,toEmail,subj,uid,messageId) {
     from: process.env.first_email,
     to: toEmail,
     inReplyTo: messageId,
-    references: messageId,
     subject: `${subj}`,
     html: `
       <img src="cid:screenshot_cid" alt="Captured Screenshot" style="max-width: 100%; border: 1px solid #ddd; padding: 5px;"/>
