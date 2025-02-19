@@ -222,7 +222,7 @@ async function sendEmail(attachmentPath,toEmail,subj,uid) {
   let mailOptions = {
     from: process.env.first_email,
     to: toEmail,
-    subject: `Screenshot - ${subj}`,
+    subject: `${subj}`,
     html: `
       <h2>Seacardsys Screenshot</h2>
       <p>Here is the latest captured screenshot:</p>

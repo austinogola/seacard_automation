@@ -1,0 +1,140 @@
+.parentCav{
+    height: 500px;
+    width:800px;
+    overflow: scroll;
+    position: absolute;
+    top: 100px;
+    display: flex;
+    align-items: center;
+    z-index: 2000;
+    border:1px solid green;
+    background-color: white;
+    padding: 10px;
+}
+.parentCav>*{
+    margin-left:15px ;
+    margin-right:15px ;
+    /* z-index: 2100;
+    border: 1px solid red; */
+}
+
+.imageParent{
+    position: relative;
+}
+
+.hBoxHolder{
+    width:100%;
+    height:100%;
+    position: relative;
+    z-index: 9999;
+}
+.hBox{
+    position: absolute;
+    /* border: 1px solid green; */
+    z-index: 9999;
+    left:0px !important;
+    top: 0px !important;
+}
+
+.showButton{
+    position: absolute;
+    top: 0px;
+    width: 100px;
+    height: 50px;
+    z-index: 9999;
+    background-color: white;
+}
+
+.theCanvasParent{
+    border: 2px solid red;
+    z-index: 999999;
+    position: absolute;
+    top: 0px;
+}
+.hidden{
+    display: none;
+}
+
+.boxHolder{
+    position: relative;
+}
+.faceBox,.bodyBox{
+    position: absolute;
+    /* border: 2px solid green ; */
+    z-index: 1000;
+    /* filter: blur(5px); */
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(7px);
+    /* clip-path: inset(0); */
+}
+.faceBox.male,.bodyBox.male{
+    border: 2px solid blue ;
+}
+.faceBox.female,.bodyBox.female{
+    border: 2px solid pink ;
+}
+
+
+.image_canvas_holder,.video_canvas_holder{
+    position: relative;
+}
+.media_holder{
+    position: relative;
+}
+.bounding_box{
+    position:absolute;
+    z-index: 999;
+}
+.image_canvas_holder>img{
+    /* position: absolute;
+    top:0px;
+    left:0px;  */
+}
+.video_canvas_holder>video{
+    /* position: absolute;
+    top:0px;
+    left:0px;  */
+}
+
+.face_box{
+    position: absolute;
+    border: 1px solid red;
+    z-index:999;
+}
+
+
+.canvas_holder{
+    position: absolute;
+    top:0px;
+    left:0px;
+    z-index: 9999;
+    pointer-events: none;
+}
+.canvas_holder>canvas{
+    z-index: 9999;
+    pointer-events: none;
+}  
+
+.male_box,.female_box{
+    position: absolute;
+    z-index:9999;
+    border-top-left-radius: 25%;
+    border-top-right-radius: 25%;
+    border-bottom-left-radius: 25%;
+    border-bottom-right-radius: 25%;
+    backdrop-filter: blur(25px)
+}
+
+.male_box{
+    /* border:2px solid blue; */
+}
+.female_box{
+    /* border:2px solid pink; */
+}
+
+.video_box{
+
+}
+
+
+
