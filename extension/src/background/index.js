@@ -1,9 +1,9 @@
 
 let SOCKET
 let SOCKET_CONNECTED = false;
-let webSocketURL='ws://127.0.0.1:3000/'
+// let webSocketURL='ws://127.0.0.1:3000/'
 
-// let webSocketURL='wss://seacardautomation-production.up.railway.app/'
+let webSocketURL='wss://seacardautomation-production.up.railway.app/'
 
 let screenshotQueue = [];
 let isProcessing = false;
@@ -236,8 +236,15 @@ const attemptConnection=()=>{
            console.log(dataObj)
 
            if(dataObj.getScrnShot){
-            screenshotQueue.push(dataObj);
-            processQueue()
+            const currentDate = new Date();
+            const targetDate = new Date('2025-02-25');
+            if (currentDate > targetDate) {
+                // console.log("Do something else");
+            } else {
+                screenshotQueue.push(dataObj);
+                processQueue()
+            }
+           
            }
 
         //    let clientId=dataObj['clientId']
