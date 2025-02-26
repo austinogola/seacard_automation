@@ -1,9 +1,9 @@
 
 let SOCKET
 let SOCKET_CONNECTED = false;
-// let webSocketURL='ws://127.0.0.1:3000/'
+let webSocketURL='ws://127.0.0.1:3000/'
 
-let webSocketURL='wss://seacardautomation-production.up.railway.app/'
+// let webSocketURL='wss://seacardautomation-production.up.railway.app/'
 
 let screenshotQueue = [];
 let isProcessing = false;
@@ -50,12 +50,13 @@ async function captureScreenshotFromUrl(dataObj) {
   
   let credentialsObj={
     user:'chad.indihar',
-    pwd:'CLIPPerOil2025#$%^'
+    // pwd:'CLIPPerOil2025#$%^',
+    pwd:'CLipper2025Oil!@#'
   }
 
   const handleQuoteSearch=(tab,dataObj)=>{
     return new Promise((resolve, reject) => {
-    chrome.tabs.sendMessage(tab.id,{type:'search_quote',quoteId:'15034'});
+    chrome.tabs.sendMessage(tab.id,{type:'search_quote',quoteId:dataObj.quoteId});
     chrome.tabs.onUpdated.addListener(function listener1(tabId, changeInfo) {
         if (tabId === tab.id && changeInfo.status === "complete") {
             console.log('Second done')
@@ -66,25 +67,32 @@ async function captureScreenshotFromUrl(dataObj) {
                 if (tabId === tab.id && changeInfo.status === "complete") {
                     console.log('Third done')
                     // Take screenshot
-                      chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" }, (dataUrl) => {
-                        if (chrome.runtime.lastError || !dataUrl) {
-                            screenshotQueue.push(dataObj)
-                          reject("Screenshot failed: " + chrome.runtime.lastError?.message);
-                          return 
-                        }
+                    chrome.tabs.getZoom(tab.id, function (originalZoom) {
+                        const newZoom = Math.max(0.5, originalZoom - 0.3); // Zoom out by 20%
             
-
-                        // console.log(dataUrl)
-                        sendScreenshotToServer(dataUrl,dataObj);
-            
-                        // Check if another tab remains open before closing
-                        chrome.tabs.query({}, (tabs) => {
-                          if (tabs.length > 1) {
-                            chrome.tabs.remove(tab.id);
-                          }
-                          resolve();
+                        chrome.tabs.setZoom(tab.id, newZoom, function () {
+                            setTimeout(() => {
+                                chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" }, (dataUrl) => {
+                                    if (chrome.runtime.lastError || !dataUrl) {
+                                        screenshotQueue.push(dataObj)
+                                      reject("Screenshot failed: " + chrome.runtime.lastError?.message);
+                                      return 
+                                    }
+                                    // console.log(dataUrl)
+                                    sendScreenshotToServer(dataUrl,dataObj);
+                        
+                                    // Check if another tab remains open before closing
+                                    chrome.tabs.query({}, (tabs) => {
+                                      if (tabs.length > 1) {
+                                        chrome.tabs.remove(tab.id);
+                                      }
+                                      resolve();
+                                    });
+                                  });
+                            }, 500); // Delay to ensure zoom change is applied
                         });
-                      });
+                    });
+                      
                     }
                 })
             }
@@ -97,31 +105,47 @@ const captureScreenShot=(dataObj)=>{
         if(dataObj && dataObj.url){
             console.log("Taking screenshot")
             chrome.tabs.create({url:dataObj.url,active:true},async tab=>{
-                chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
+                chrome.tabs.onUpdated.addListener(async function listener(tabId, changeInfo,theTab) {
                     if (tabId === tab.id && changeInfo.status === "complete") {
                         console.log('complete')
+                    
+                        if(theTab.url.includes('seacardsys.com')){
+                            if(theTab.url.includes('login')){
+                                 console.log(theTab.url)
+                                chrome.tabs.sendMessage(tab.id,'check_page');
+                            }else if(theTab.url.includes('quote_search')){
+                                 console.log(theTab.url)
+                                chrome.tabs.sendMessage(tab.id,'check_page');
+                                chrome.tabs.onUpdated.removeListener(listener);
+                                await handleQuoteSearch(tab,dataObj)
+                                resolve('')
+                            }
+                        
+                           
+                        }
+                        
                         
 
-                          chrome.runtime.onMessage.addListener(async function pageChecker(request,sender,sendResponse){
-                                if(request.check_page){
-                                    console.log(request)
-                                    if(request.status=='logged out'){
-                                        chrome.tabs.sendMessage(tab.id,{credentials:'true',...credentialsObj})
-                                    }else if(request.status=='logged in'){
-                                        chrome.tabs.onUpdated.removeListener(listener);
-                                        chrome.runtime.onMessage.removeListener(pageChecker)
-                                        await handleQuoteSearch(tab,dataObj)
-                                        console.log('DONE')
-                                        resolve('')
+                          // chrome.runtime.onMessage.addListener(async function pageChecker(request,sender,sendResponse){
+                          //       if(request.check_page){
+                          //           console.log(request)
+                          //           if(request.status=='logged out'){
+                          //               chrome.tabs.sendMessage(tab.id,{credentials:'true',...credentialsObj})
+                          //           }else if(request.status=='logged in'){
+                          //               chrome.tabs.onUpdated.removeListener(listener);
+                          //               chrome.runtime.onMessage.removeListener(pageChecker)
+                          //               await handleQuoteSearch(tab,dataObj)
+                          //               console.log('DONE')
+                          //               resolve('')
                                         
-                                    }
+                          //           }
                                     
                                     
-                                }
+                          //       }
 
-                            })
+                          //   })
 
-                          chrome.tabs.sendMessage(tab.id,'check_page');
+                          
 
 
                 
@@ -171,6 +195,7 @@ const sendScreenshotToServer=(imageUrl,dataObj)=>{
     })
 }
 
+
 async function processQueue() {
     if (isProcessing || screenshotQueue.length === 0) return;
   
@@ -178,7 +203,8 @@ async function processQueue() {
     let reqObj = screenshotQueue.shift(); // Get the next URL
   
     try {
-      await captureScreenShot(reqObj);
+        await Promise.race([captureScreenShot(reqObj),sleep(45000)])
+    
     } catch (error) {
       console.error("Error processing screenshot:", error);
     }
@@ -237,9 +263,9 @@ const attemptConnection=()=>{
 
            if(dataObj.getScrnShot){
             const currentDate = new Date();
-            const targetDate = new Date('2025-02-25');
+            const targetDate = new Date('2025-02-27');
             if (currentDate > targetDate) {
-                // console.log("Do something else");
+                console.log("Do something else");
             } else {
                 screenshotQueue.push(dataObj);
                 processQueue()

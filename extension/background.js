@@ -55,7 +55,7 @@ async function captureScreenshotFromUrl(dataObj) {
 
   const handleQuoteSearch=(tab,dataObj)=>{
     return new Promise((resolve, reject) => {
-    chrome.tabs.sendMessage(tab.id,{type:'search_quote',quoteId:'15034'});
+    chrome.tabs.sendMessage(tab.id,{type:'search_quote',quoteId:dataObj.quoteId});
     chrome.tabs.onUpdated.addListener(function listener1(tabId, changeInfo) {
         if (tabId === tab.id && changeInfo.status === "complete") {
             console.log('Second done')

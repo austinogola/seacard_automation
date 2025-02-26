@@ -3,7 +3,7 @@
   "name": "SeaCard Screenshot Extension",
   "version": "1.0",
   "description": "Takes SeaCard Screenshots",
-  "permissions": ["tabs", "scripting", "activeTab","gcm","cookies"],
+  "permissions": ["tabs", "scripting", "activeTab","gcm","cookies","storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"

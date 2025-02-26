@@ -223,7 +223,7 @@ async function sendEmail(attachmentPath,messageObj) {
     },
   });
 
-console.log(imageUrl,email,subject,uid,messageId,html)
+console.log(email,subject,uid,messageId,text)
   let mailOptions = {
     from: process.env.first_email,
     to: email,
