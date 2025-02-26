@@ -115,7 +115,7 @@ imap.once("ready", function () {
     imap.on("mail", function (ee) {
       console.log('Mail recieved')
       console.log(ee)
-      // checkEmails();
+      checkEmails();
     });
   });
 });
@@ -141,7 +141,7 @@ let fromEmailString=['FROM', 'kevin@clipperoil.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
 setInterval(() => {
   checkEmails();
-}, 20000);
+}, 360000);
 
 // function openInbox(callback) {
 //   imap.openBox('INBOX', false, callback);
