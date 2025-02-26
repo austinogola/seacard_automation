@@ -68,7 +68,7 @@ wss.on('connection',function connections(ws){
       const {imageUrl,email,subject,uid,messageId}=messageObj
       console.log('Received ',email,subject);
       let filePath= saveScreenshot(imageUrl)
-      await sendEmail(filePath,email,subject,uid,messageId);
+      await sendEmail(filePath,messageObj);
     }
     
    
@@ -115,7 +115,7 @@ imap.once("ready", function () {
     imap.on("mail", function (ee) {
       console.log('Mail recieved')
       console.log(ee)
-      checkEmails();
+      // checkEmails();
     });
   });
 });
@@ -141,7 +141,7 @@ let fromEmailString=['FROM', 'kevin@clipperoil.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
 setInterval(() => {
   checkEmails();
-}, 45000);
+}, 20000);
 
 // function openInbox(callback) {
 //   imap.openBox('INBOX', false, callback);
@@ -173,13 +173,14 @@ function checkEmails() {
         msg.on("body", function (stream) {
           simpleParser(stream, async (err, parsed) => {
             if (err) return;
-            const { from, subject,messageId } = parsed;
+            const { from, subject,messageId,text } = parsed;
+            // console.log(text,html)
             console.log(messageId)
             if(subject.includes(subJectString)){
               let fromEmail=from.value[0].address
               let quoteId=extractQuoteId(subject)
               console.log(fromEmail, subject,quoteId)
-              sendMessage(JSON.stringify({getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId,messageId}))
+              sendMessage(JSON.stringify({getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId,messageId,text}))
               
             }
             
@@ -212,7 +213,8 @@ function saveScreenshot(base64Data) {
   return filePath;
 }
 
-async function sendEmail(attachmentPath,toEmail,subj,uid,messageId) {
+async function sendEmail(attachmentPath,messageObj) {
+  const {imageUrl,email,subject,uid,messageId,text}=messageObj
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -221,12 +223,13 @@ async function sendEmail(attachmentPath,toEmail,subj,uid,messageId) {
     },
   });
 
+console.log(imageUrl,email,subject,uid,messageId,html)
   let mailOptions = {
     from: process.env.first_email,
-    to: toEmail,
+    to: email,
     inReplyTo: messageId,
-    subject: `${subj}`,
-    html: `
+    subject: `${subject}`,
+    html: `${text}
       <img src="cid:screenshot_cid" alt="Captured Screenshot" style="max-width: 100%; border: 1px solid #ddd; padding: 5px;"/>
     `,
     attachments: [
