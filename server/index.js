@@ -154,6 +154,15 @@ function extractQuoteId(subject) {
   return match ? match[1] : null;
 }
 
+function removeEmailNoticeAndDashes(str) {
+    let index = str.indexOf("This email is intended");
+    if (index !== -1) {
+        let beforeText = str.slice(0, index); // Get text before "This email is intended"
+        return beforeText.replace(/-+\s*$/, ''); // Remove trailing dashes and spaces
+    }
+    return str;
+}
+
 function checkEmails() {
   imap.search(["UNSEEN",['SINCE', getFormattedDates().yesterday],fromEmailString], function (err, results) {
     console.log(err)
@@ -173,8 +182,9 @@ function checkEmails() {
         msg.on("body", function (stream) {
           simpleParser(stream, async (err, parsed) => {
             if (err) return;
-            const { from, subject,messageId,text } = parsed;
-            // console.log(text,html)
+            let { from, subject,messageId,text } = parsed;
+            text=removeEmailNoticeAndDashes(text)
+            console.log(text)
             console.log(messageId)
             if(subject.includes(subJectString)){
               let fromEmail=from.value[0].address
