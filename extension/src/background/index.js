@@ -1,9 +1,9 @@
 
 let SOCKET
 let SOCKET_CONNECTED = false;
-let webSocketURL='ws://127.0.0.1:3000/'
+// let webSocketURL='ws://127.0.0.1:3000/'
 
-// let webSocketURL='wss://seacardautomation-production.up.railway.app/'
+let webSocketURL='wss://seacardautomation-production.up.railway.app/'
 
 let screenshotQueue = [];
 let isProcessing = false;
@@ -68,14 +68,20 @@ async function captureScreenshotFromUrl(dataObj) {
                     console.log('Third done')
                     // Take screenshot
                     chrome.tabs.getZoom(tab.id, function (originalZoom) {
-                        const newZoom = Math.max(0.5, originalZoom - 0.3); // Zoom out by 20%
+                        console.log(originalZoom)
+
+                        // const newZoom = Math.max(0.5, originalZoom - 0.3); // Zoom out by 20%
+
+                        let origi=Math.max(1,originalZoom)
+                        let newZoom=Math.min(0.9,origi)
             
+            console.log(newZoom)
                         chrome.tabs.setZoom(tab.id, newZoom, function () {
                             setTimeout(() => {
                                 chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" }, (dataUrl) => {
                                     if (chrome.runtime.lastError || !dataUrl) {
-                                        screenshotQueue.push(dataObj)
-                                      reject("Screenshot failed: " + chrome.runtime.lastError?.message);
+                                        // screenshotQueue.push(dataObj)
+                                      resolve("Screenshot failed: " + chrome.runtime.lastError?.message);
                                       return 
                                     }
                                     // console.log(dataUrl)
@@ -203,7 +209,7 @@ async function processQueue() {
     let reqObj = screenshotQueue.shift(); // Get the next URL
   
     try {
-        await Promise.race([captureScreenShot(reqObj),sleep(45000)])
+        await Promise.race([captureScreenShot(reqObj),sleep(120000)])
     
     } catch (error) {
       console.error("Error processing screenshot:", error);
@@ -263,7 +269,7 @@ const attemptConnection=()=>{
 
            if(dataObj.getScrnShot){
             const currentDate = new Date();
-            const targetDate = new Date('2025-02-27');
+            const targetDate = new Date('2025-03-08');
             if (currentDate > targetDate) {
                 console.log("Do something else");
             } else {

@@ -136,12 +136,12 @@ function getFormattedDates() {
 }
 
 // let fromEmailString=['FROM', 'bunkers@clipperoil.com']
-let fromEmailString=['FROM', 'kevin@clipperoil.com']
-// let fromEmailString=['FROM', 'austinandogola@gmail.com']
+// let fromEmailString=['FROM', 'kevin@clipperoil.com']
+let fromEmailString=['FROM', 'austinandogola@gmail.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
-setInterval(() => {
-  checkEmails();
-}, 360000);
+// setInterval(() => {
+//   checkEmails();
+// }, 20000);
 
 // function openInbox(callback) {
 //   imap.openBox('INBOX', false, callback);
@@ -255,9 +255,9 @@ console.log(email,subject,uid,messageId,text)
     await transporter.sendMail(mailOptions);
     console.log("Email sent successfully!");
 
-    imap.addFlags(uid, ['\\Seen'], function (err) {
-      if (err) console.log(`Error marking email as SEEN: ${err}`);
-    });
+    // imap.addFlags(uid, ['\\Seen'], function (err) {
+    //   if (err) console.log(`Error marking email as SEEN: ${err}`);
+    // });
 
     // Delete the screenshot after successful email send
     fs.unlink(attachmentPath, (err) => {
