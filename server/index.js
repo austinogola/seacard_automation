@@ -532,9 +532,10 @@ const emailText = text.replace(/\n/g, '<br>');
     to: email,
     inReplyTo: messageId,
     subject: `${subject}`,
-    html: `${emailText}
+    html: `
       <img src="cid:screenshot_cid" alt="Captured Screenshot" style="max-width: 100%; border: 1px solid #ddd; padding: 5px;"/>
-    `,
+      <br>
+    ${emailText}`,
     attachments: [
       {
         filename: "screenshot.png",
