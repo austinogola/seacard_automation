@@ -12,6 +12,7 @@ const path = require("path");
 const server=require('http').createServer(app)
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
+const puppeteer = require('puppeteer');
 
 
 
@@ -29,8 +30,239 @@ const connectedClients = new Map()
 // ytdl('https://www.youtube.com/watch?v=shDI1W5ZXV4')
 //   .pipe(fs.createWriteStream('video2.mp4'));
 
+// let screenShotUrl='https://seacardsys.com/cgi-bin/dashboard'
+let screenShotUrl='https://seacardsys.com/cgi-bin/oms_supp_quote_search'
+
+let COOKIES_FILE='./cookies.json'
+let HANDLED_EMAILS='./handled.json'
+const runBrowserScreenshot=async(itemObj)=>{
+  const {email,subject,url,uid,quoteId,messageId,text}=itemObj
+  return new Promise(async(resolve,reject)=>{
+      const browser = await puppeteer.launch({ headless: true});
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1080, height: 800 });
+
+      
+
+      if (fs.existsSync(COOKIES_FILE)) {
+            const cookies = JSON.parse(fs.readFileSync(COOKIES_FILE, 'utf8'));
+            await page.setCookie(...cookies);
+            console.log('Loaded cookies.');
+      }
+
+    console.log('Going to url',url)
+      try{
+         await Promise.race([
+                page.goto(url, { waitUntil: 'networkidle2' }),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Page load timeout')), 30000)
+                )
+            ]);
+        }catch(err){
+          console.log(`Retrying...`);
+          await page.reload({ waitUntil: 'networkidle2' });
+        }
 
 
+        const currentUrl=await page.url()
+
+        console.log(currentUrl)
+
+        let loggedIn=false
+
+        if(currentUrl.includes('login')){
+          console.log('Session expired. Logging in...');
+          const usernameSelector = 'input.Username' 
+          const passwordSelector = "input.Password"; 
+          const submitButtonSelector = "input[type='Submit']"
+          await page.locator('input.Username').fill("kevin.alameda")
+          await page.locator("input.Password").fill("Bunkers2025!@")
+           // await page.type(usernameSelector, "kevin.alameda", { delay: 100 }); // Typing with a delay for realism
+            // await page.type(passwordSelector, "Bunkers2025!@", { delay: 100 });
+              console.log("First click")
+          await Promise.all([
+                  page.click(submitButtonSelector),
+                  page.waitForNavigation({ waitUntil: 'networkidle2' })
+              ]);
+
+    // console.log("Second click")
+    // const tabBtn = 'a#MerchantTopNavBar_MERCHANT_SEA_CARD_OMS_LINK_ANCHOR' 
+    // page.click(tabBtn),
+          // await Promise.all([
+          //         page.click('a#MerchantTopNavBar_MERCHANT_SEA_CARD_OMS_LINK_ANCHOR'),
+          //         page.waitForNavigation({ waitUntil: 'networkidle2' })
+          //     ]);
+
+          console.log("Third click")
+          // await Promise.all([
+          //         page.click('a#MerchantSEACardOMSNavBar_OMS_SUPP_QUOTE_SEARCH_LINK_ANCHOR'),
+          //         page.waitForNavigation({ waitUntil: 'networkidle2' })
+          //     ]);
+
+          console.log("Done")
+
+
+        }else{
+          loggedIn=true
+          console.log("Still logged in")
+        }
+
+        
+      
+
+        const quoteSearchInput = "input#QUOTE_SEARCH_QUOTE_ID"
+        const searchBtn = 'input[value="Search"]'; 
+
+        console.log('Searching now')
+        // await page.type(quoteSearchInput, quoteId, { delay: 50 });
+         await page.locator(quoteSearchInput).fill(quoteId)
+         // await page.locator('::-input-aria([name="Click me"][role="button"])').click();
+         //  await page.waitForNavigation({ waitUntil: 'networkidle2' })
+         page.click(searchBtn)
+        await Promise.all([
+               page.waitForNavigation({ waitUntil: 'networkidle2' })
+            ]);
+
+
+        const viewLink='a[id*="QUOTE_SEARCH"]'
+        // const [element] = await page.$x("//a[contains(text(), 'View')]");
+        // await page.click(viewLink)
+        await page.locator('td ::-p-text(View)').click()
+        await Promise.all([
+                // page.click(element),
+                // page.locator('div ::-a-text(View)').click(),
+                page.waitForNavigation({ waitUntil: 'networkidle2' })
+            ]);
+
+        // await page.setViewport(null);
+        // await page.setViewport({ width: 1280, height: 600 });
+
+        let timestamp=new Date().getTime()
+        const screenshotPath = path.join(__dirname, `screenshot_${timestamp}.png`);
+
+  
+        await page.screenshot({ path: screenshotPath});
+
+        console.log('Screenshot taken')
+        
+         const cookies = await page.cookies();
+         await browser.close();
+
+
+        if(!loggedIn){
+          fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies));
+          console.log('Cookies saved.');
+        }
+
+        sendEmail(screenshotPath,itemObj)
+
+        resolve('DONE')
+
+        
+
+
+
+  })
+}
+
+// runBrowserScreenshot({email:'austt',url:screenShotUrl,quoteId:'15062'})
+
+
+const runPupet=async(url)=>{
+
+  try{
+      const browser = await puppeteer.launch({ headless: false});
+      const page = await browser.newPage();
+
+      await page.setViewport({ width: 1280, height: 720 });
+
+      let COOKIES_FILE='./cookies.json'
+
+      if (fs.existsSync(COOKIES_FILE)) {
+            const cookies = JSON.parse(fs.readFileSync(COOKIES_FILE, 'utf8'));
+            await page.setCookie(...cookies);
+            console.log('Loaded cookies.');
+        }
+
+      // await page.goto(url, { waitUntil: 'networkidle2' });
+
+
+        try{
+         await Promise.race([
+                page.goto(url, { waitUntil: 'networkidle2' }),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Page load timeout')), 15000)
+                )
+            ]);
+        }catch(err){
+          console.log(`Retrying...`);
+          await page.reload({ waitUntil: 'networkidle2' });
+        }
+        
+
+      const currentUrl=await page.url()
+
+      console.log(currentUrl)
+
+      let loggedIn=false
+
+      if(currentUrl.includes('login')){
+        console.log('Session expired. Logging in...');
+        const usernameSelector = 'input.Username' 
+        const passwordSelector = "input.Password"; 
+        const submitButtonSelector = "input[type='Submit']"
+         await page.type(usernameSelector, "kevin.alameda", { delay: 100 }); // Typing with a delay for realism
+          await page.type(passwordSelector, "Bunkers2025!@", { delay: 100 });
+        await Promise.all([
+                page.click(submitButtonSelector),
+                page.waitForNavigation({ waitUntil: 'networkidle2' })
+            ]);
+      }else{
+        loggedIn=true
+        console.log("Still logged in")
+      }
+
+
+      if(!loggedIn){
+        const cookies = await page.cookies();
+        fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies));
+        console.log('Cookies saved.');
+      }
+      
+
+    const quoteSearchInput = "input#QUOTE_SEARCH_QUOTE_ID"
+    const searchBtn = "input[value='Search']"; 
+
+    // await page.type(quoteSearchInput, "Bunkers2025!@", { delay: 100 });
+    //     await Promise.all([
+    //             page.click(submitButtonSelector),
+    //             page.waitForNavigation({ waitUntil: 'networkidle2' })
+    //         ]);
+        
+
+      const screenshotPath = path.join(__dirname, 'screenshot.png');
+      await page.screenshot({ path: screenshotPath,fullPage:true });
+
+      // // console.log(page)
+
+     
+
+      // await Promise.all([
+      //       page.click(submitButtonSelector),
+      //       page.waitForNavigation({ waitUntil: 'networkidle2' })
+      //   ]);
+        
+      //   // Take a screenshot
+     
+
+        await browser.close();
+
+  }catch(err){
+
+  }
+}
+
+// runPupet(screenShotUrl)
 function sendMessage(message) {
   wss.clients.forEach(function each(client) {
     if (client.readyState === WebSocket.OPEN) {
@@ -115,6 +347,10 @@ imap.once("ready", function () {
     imap.on("mail", function (ee) {
       console.log('Mail recieved')
       console.log(ee)
+      clearInterval(intervalId);
+      intervalId=setInterval(() => {
+        checkEmails();
+      }, 45000);
       checkEmails();
     });
   });
@@ -136,19 +372,18 @@ function getFormattedDates() {
 }
 
 // let fromEmailString=['FROM', 'bunkers@clipperoil.com']
-let fromEmailString=['FROM', 'kevin@clipperoil.com']
-// let fromEmailString=['FROM', 'austinandogola@gmail.com']
+// let fromEmailString=['FROM', 'kevin@clipperoil.com']
+let fromEmailString=['FROM', 'austinandogola@gmail.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
-setInterval(() => {
+let intervalId=setInterval(() => {
   checkEmails();
-}, 120000);
+}, 45000);
 
 // function openInbox(callback) {
 //   imap.openBox('INBOX', false, callback);
 // }
 
-// let screenShotUrl='https://seacardsys.com/cgi-bin/dashboard'
-let screenShotUrl='https://seacardsys.com/cgi-bin/oms_supp_quote_search'
+
 function extractQuoteId(subject) {
   const match = subject.match(/Quote Request ID (\d+)/);
   return match ? match[1] : null;
@@ -163,7 +398,23 @@ function removeEmailNoticeAndDashes(str) {
     return str;
 }
 
+const sleep=(ms)=>{
+  return new Promise((resolve,reject)=>{
+    setTimeout(() => resolve(ms), ms)
+  })
+}
 function checkEmails() {
+  let handledUids=[]
+  if (fs.existsSync(HANDLED_EMAILS)) {
+         handledUids = JSON.parse(fs.readFileSync(HANDLED_EMAILS, 'utf8'));
+  }else{
+    handledUids=[]
+  }
+  // handledUids=filterLast10Hours(handledUids)
+  let alreadyUids=handledUids.map(item=>(item.uid))
+
+
+  
   imap.search(["UNSEEN",['SINCE', getFormattedDates().yesterday],fromEmailString], function (err, results) {
     console.log(err)
     console.log(results)
@@ -184,15 +435,24 @@ function checkEmails() {
             if (err) return;
             let { from, subject,messageId,text } = parsed;
             text=removeEmailNoticeAndDashes(text)
-            console.log(text)
-            console.log(messageId)
-            if(subject.includes(subJectString)){
-              let fromEmail=from.value[0].address
-              let quoteId=extractQuoteId(subject)
-              console.log(fromEmail, subject,quoteId)
-              sendMessage(JSON.stringify({getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId,messageId,text}))
+            // console.log(text)
+            // console.log(messageId)
+            if(alreadyUids.includes(uid)){
+              console.log('Already handled')
+            
+            }else{
+                if(subject.includes(subJectString)){
+                let fromEmail=from.value[0].address
+                let quoteId=extractQuoteId(subject)
+                console.log(fromEmail, subject,quoteId)
+                let sendObj={getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId,messageId,text}
+                let send= await Promise.race([runBrowserScreenshot(sendObj),sleep(40000)])
+                console.log(send)
+              // sendMessage(JSON.stringify(sendObj))
               
             }
+            }
+            
             
           })
         })
@@ -223,8 +483,36 @@ function saveScreenshot(base64Data) {
   return filePath;
 }
 
+
+function filterLast10Hours(data) {
+    const now = Date.now(); // Current timestamp in milliseconds
+    const tenHoursAgo = now - 10 * 60 * 60 * 1000; // 10 hours in milliseconds
+
+    return data.filter(item => new Date(item.timestamp).getTime() >= tenHoursAgo);
+}
 async function sendEmail(attachmentPath,messageObj) {
+
+
   const {imageUrl,email,subject,uid,messageId,text}=messageObj
+  
+  
+  // console.log(alreadyUids)
+
+  
+  let handledUids=[]
+  if (fs.existsSync(HANDLED_EMAILS)) {
+         handledUids = JSON.parse(fs.readFileSync(HANDLED_EMAILS, 'utf8'));
+  }else{
+    handledUids=[]
+  }
+  // handledUids=filterLast10Hours(handledUids)
+  let alreadyUids=handledUids.map(item=>(item.uid))
+
+  if(alreadyUids.includes(uid)){
+    console.log('Already handled')
+    return
+  }
+
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -233,13 +521,14 @@ async function sendEmail(attachmentPath,messageObj) {
     },
   });
 
-console.log(email,subject,uid,messageId,text)
+// console.log(email,subject,uid,messageId,text)
+const emailText = text.replace(/\n/g, '<br>');
   let mailOptions = {
     from: process.env.first_email,
     to: email,
     inReplyTo: messageId,
     subject: `${subject}`,
-    html: `${text}
+    html: `${emailText}
       <img src="cid:screenshot_cid" alt="Captured Screenshot" style="max-width: 100%; border: 1px solid #ddd; padding: 5px;"/>
     `,
     attachments: [
@@ -253,11 +542,15 @@ console.log(email,subject,uid,messageId,text)
 
   try {
     await transporter.sendMail(mailOptions);
+    
+    handledUids.push({timestamp:new Date().getTime(),uid})
     console.log("Email sent successfully!");
+    fs.writeFileSync(HANDLED_EMAILS, JSON.stringify(handledUids));
+    console.log('UID saved.');
 
-    // imap.addFlags(uid, ['\\Seen'], function (err) {
-    //   if (err) console.log(`Error marking email as SEEN: ${err}`);
-    // });
+    imap.addFlags(uid, ['\\Seen'], function (err) {
+      if (err) console.log(`Error marking email as SEEN: ${err}`);
+    });
 
     // Delete the screenshot after successful email send
     fs.unlink(attachmentPath, (err) => {
