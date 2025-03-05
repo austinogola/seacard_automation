@@ -35,6 +35,12 @@ let screenShotUrl='https://seacardsys.com/cgi-bin/oms_supp_quote_search'
 
 let COOKIES_FILE='./cookies.json'
 let HANDLED_EMAILS='./handled.json'
+
+function extractSeacardLinks(emailText) {
+    const pattern = /https:\/\/seacardsys\.com[^\s]+/g;
+    return emailText.match(pattern) || [];
+}
+
 const runBrowserScreenshot=async(itemObj)=>{
   const {email,subject,url,uid,quoteId,messageId,text}=itemObj
   return new Promise(async(resolve,reject)=>{
@@ -80,29 +86,44 @@ const runBrowserScreenshot=async(itemObj)=>{
           const usernameSelector = 'input.Username' 
           const passwordSelector = "input.Password"; 
           const submitButtonSelector = "input[type='Submit']"
-          await page.locator('input.Username').fill("kevin.alameda")
-          await page.locator("input.Password").fill("Bunkers2025!@")
+          // await page.locator('input.Username').fill("kevin.alameda")
+          // await page.locator("input.Password").fill("Bunkers2025!@")
+
+          await sleep(1000)
+
+          await Promise.race([page.locator('input#FW_LOGIN_USERNAME').fill("kevin.alameda"),page.locator('input.Username').fill("kevin.alameda")])
+          await Promise.race([page.locator('input#FW_LOGIN_PASSWORD').fill("Bunkers2025!@"),page.locator("input.Password").fill("Bunkers2025!@")])
+
+ await sleep(1000)
+          
+
            // await page.type(usernameSelector, "kevin.alameda", { delay: 100 }); // Typing with a delay for realism
             // await page.type(passwordSelector, "Bunkers2025!@", { delay: 100 });
+ 
+ 
+ const submitButtonSelector2='input#FW_LOGIN_LOGIN'
               console.log("First click")
+    await Promise.race([page.locator(submitButtonSelector2).click(),page.locator(submitButtonSelector).click()])
+
           await Promise.all([
-                  page.click(submitButtonSelector),
-                  page.waitForNavigation({ waitUntil: 'networkidle2' })
+                  // page.click(submitButtonSelector2),
+                  page.waitForNavigation({ timeout: 70000, waitUntil: 'networkidle2' })
               ]);
 
     // console.log("Second click")
     // const tabBtn = 'a#MerchantTopNavBar_MERCHANT_SEA_CARD_OMS_LINK_ANCHOR' 
     // page.click(tabBtn),
-          // await Promise.all([
-          //         page.click('a#MerchantTopNavBar_MERCHANT_SEA_CARD_OMS_LINK_ANCHOR'),
-          //         page.waitForNavigation({ waitUntil: 'networkidle2' })
-          //     ]);
+    //       // await Promise.all([
+    //       //         page.click('a#MerchantTopNavBar_MERCHANT_SEA_CARD_OMS_LINK_ANCHOR'),
+    //       //         page.waitForNavigation({  timeout: 70000, waitUntil: 'networkidle2' })
+    //       //     ]);
 
-          console.log("Third click")
-          // await Promise.all([
-          //         page.click('a#MerchantSEACardOMSNavBar_OMS_SUPP_QUOTE_SEARCH_LINK_ANCHOR'),
-          //         page.waitForNavigation({ waitUntil: 'networkidle2' })
-          //     ]);
+    //       console.log("Third click")
+    //       page.click('a#MerchantSEACardOMSNavBar_OMS_SUPP_QUOTE_SEARCH_LINK_ANCHOR'),
+    //       // await Promise.all([
+    //       //         page.click('a#MerchantSEACardOMSNavBar_OMS_SUPP_QUOTE_SEARCH_LINK_ANCHOR'),
+    //       //         page.waitForNavigation({ waitUntil: 'networkidle2' })
+    //       //     ]);
 
           console.log("Done PPaus")
 
@@ -115,29 +136,29 @@ const runBrowserScreenshot=async(itemObj)=>{
         
       
 
-        const quoteSearchInput = "input#QUOTE_SEARCH_QUOTE_ID"
-        const searchBtn = 'input[value="Search"]'; 
+        // const quoteSearchInput = "input#QUOTE_SEARCH_QUOTE_ID"
+        // const searchBtn = 'input[value="Search"]'; 
 
-        console.log('Searching now')
-        // await page.type(quoteSearchInput, quoteId, { delay: 50 });
-         await page.locator(quoteSearchInput).fill(quoteId)
-         // await page.locator('::-input-aria([name="Click me"][role="button"])').click();
-         //  await page.waitForNavigation({ waitUntil: 'networkidle2' })
-         page.click(searchBtn)
-        await Promise.all([
-               page.waitForNavigation({ waitUntil: 'networkidle2' })
-            ]);
+        // console.log('Searching now')
+        // // await page.type(quoteSearchInput, quoteId, { delay: 50 });
+        //  await page.locator(quoteSearchInput).fill(quoteId)
+        //  // await page.locator('::-input-aria([name="Click me"][role="button"])').click();
+        //  //  await page.waitForNavigation({ waitUntil: 'networkidle2' })
+        //  page.click(searchBtn)
+        // await Promise.all([
+        //        page.waitForNavigation({ waitUntil: 'networkidle2' })
+        //     ]);
 
 
-        const viewLink='a[id*="QUOTE_SEARCH"]'
-        // const [element] = await page.$x("//a[contains(text(), 'View')]");
-        // await page.click(viewLink)
-        await page.locator('td ::-p-text(View)').click()
-        await Promise.all([
-                // page.click(element),
-                // page.locator('div ::-a-text(View)').click(),
-                page.waitForNavigation({ waitUntil: 'networkidle2' })
-            ]);
+        // const viewLink='a[id*="QUOTE_SEARCH"]'
+        // // const [element] = await page.$x("//a[contains(text(), 'View')]");
+        // // await page.click(viewLink)
+        // await page.locator('td ::-p-text(View)').click()
+        // await Promise.all([
+        //         // page.click(element),
+        //         // page.locator('div ::-a-text(View)').click(),
+        //         page.waitForNavigation({ waitUntil: 'networkidle2' })
+        //     ]);
 
         // await page.setViewport(null);
         // await page.setViewport({ width: 1280, height: 600 });
@@ -448,11 +469,13 @@ function checkEmails() {
             }else{
                 if(subject.includes(subJectString)){
                 let fromEmail=from.value[0].address
+                let link=extractSeacardLinks(text)
+                console.log(link)
                 let quoteId=extractQuoteId(subject)
                 console.log(fromEmail, subject,quoteId)
-                let sendObj={getScrnShot:true,email:fromEmail,subject,url:screenShotUrl,uid,quoteId,messageId,text}
-                let send= await Promise.race([runBrowserScreenshot(sendObj),sleep(40000)])
-                console.log(send)
+                let sendObj={getScrnShot:true,email:fromEmail,subject,url:link[0],uid,quoteId,messageId,text}
+                let send= await Promise.race([runBrowserScreenshot(sendObj),sleep(100000)])
+                // console.log(send)
               // sendMessage(JSON.stringify(sendObj))
               
             }
