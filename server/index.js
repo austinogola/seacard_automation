@@ -59,7 +59,7 @@ const runBrowserScreenshot=async(itemObj)=>{
          await Promise.race([
                 page.goto(url, { waitUntil: 'networkidle2' }),
                 new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Page load timeout')), 30000)
+                    setTimeout(() => reject(new Error('Page load timeout')), 120000)
                 )
             ]);
         }catch(err){
