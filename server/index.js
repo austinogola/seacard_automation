@@ -38,7 +38,11 @@ let HANDLED_EMAILS='./handled.json'
 const runBrowserScreenshot=async(itemObj)=>{
   const {email,subject,url,uid,quoteId,messageId,text}=itemObj
   return new Promise(async(resolve,reject)=>{
-      const browser = await puppeteer.launch({ headless: true});
+      // const browser = await puppeteer.launch({ headless: true});
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
       const page = await browser.newPage();
       await page.setViewport({ width: 1080, height: 800 });
 
