@@ -569,6 +569,6 @@ const emailText = text.replace(/\n/g, '<br>');
 
 }
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
