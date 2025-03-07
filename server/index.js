@@ -55,9 +55,9 @@ const runBrowserScreenshot=async(itemObj)=>{
       
 
       if (fs.existsSync(COOKIES_FILE)) {
-            const cookies = JSON.parse(fs.readFileSync(COOKIES_FILE, 'utf8'));
-            await page.setCookie(...cookies);
-            console.log('Loaded cookies.');
+            // const cookies = JSON.parse(fs.readFileSync(COOKIES_FILE, 'utf8'));
+            // await page.setCookie(...cookies);
+            // console.log('Loaded cookies.');
       }
 
     console.log('Going to url',url)
@@ -94,7 +94,7 @@ const runBrowserScreenshot=async(itemObj)=>{
           await Promise.race([page.locator('input#FW_LOGIN_USERNAME').fill("kevin.alameda"),page.locator('input.Username').fill("kevin.alameda")])
           await Promise.race([page.locator('input#FW_LOGIN_PASSWORD').fill("Bunkers2025!@"),page.locator("input.Password").fill("Bunkers2025!@")])
 
- await sleep(1000)
+          await sleep(1000)
           
 
            // await page.type(usernameSelector, "kevin.alameda", { delay: 100 }); // Typing with a delay for realism
@@ -126,12 +126,26 @@ const runBrowserScreenshot=async(itemObj)=>{
     //       //     ]);
 
           console.log("Done PPaus")
+          const currentUrl2=await page.url()
+
+        console.log(currentUrl2)
 
 
-        }else{
+
+        }else if (currentUrl.includes('seacard_oms')){
           loggedIn=true
           console.log("Still logged in")
         }
+        else{
+          console.log("Wrong page. Retrying")
+          resolve('RETRYING')
+         runBrowserScreenshot(itemObj)
+        }
+
+        const currentUrl3=await page.url()
+
+        console.log(currentUrl3)
+
 
         
       
@@ -171,14 +185,14 @@ const runBrowserScreenshot=async(itemObj)=>{
 
         console.log('Screenshot taken')
         
-         const cookies = await page.cookies();
+         // const cookies = await page.cookies();
          await browser.close();
 
 
-        if(!loggedIn){
-          fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies));
-          console.log('Cookies saved.');
-        }
+        // if(!loggedIn){
+        //   fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies));
+        //   console.log('Cookies saved.');
+        // }
 
         sendEmail(screenshotPath,itemObj)
 
@@ -474,7 +488,7 @@ function checkEmails() {
                 let quoteId=extractQuoteId(subject)
                 console.log(fromEmail, subject,quoteId)
                 let sendObj={getScrnShot:true,email:fromEmail,subject,url:link[0],uid,quoteId,messageId,text}
-                let send= await Promise.race([runBrowserScreenshot(sendObj),sleep(100000)])
+                let send= await Promise.race([runBrowserScreenshot(sendObj),sleep(150000)])
                 // console.log(send)
               // sendMessage(JSON.stringify(sendObj))
               
