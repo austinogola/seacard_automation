@@ -511,7 +511,8 @@ imap.once("error", function (err) {
 });
 
 imap.once("end", function () {
-  console.log("Connection ended");
+  console.log("Connection ended,retrying...");
+  imap.connect();
 });
 
 imap.connect();
