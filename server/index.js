@@ -373,28 +373,7 @@ const imapConfig = {
 
 const endpointUrl = "https://example.com/webhook"; // Replace with actual endpoint
 
-function openInbox(imap, cb) {
-  imap.openBox("INBOX", false, cb);
-}
 
-const imap = new Imap(imapConfig);
-
-imap.once("ready", function () {
-    console.log("hhhh")
-  openInbox(imap, function (err, box) {
-    if (err) throw err;
-    console.log("Connected to mailbox");
-    imap.on("mail", function (ee) {
-      console.log('Mail recieved')
-      console.log(ee)
-      clearInterval(intervalId);
-      intervalId=setInterval(() => {
-        checkEmails();
-      }, 45000);
-      checkEmails();
-    });
-  });
-});
 
 let webSocketURL='wss://api.apedata.net'
 
@@ -415,9 +394,7 @@ function getFormattedDates() {
 let fromEmailString=['FROM', 'kevin@clipperoil.com']
 // let fromEmailString=['FROM', 'austinandogola@gmail.com']
 let subJectString='SEA Card® OMSQuote Window Opened'
-let intervalId=setInterval(() => {
-  checkEmails();
-}, 45000);
+
 
 // function openInbox(callback) {
 //   imap.openBox('INBOX', false, callback);
@@ -443,79 +420,138 @@ const sleep=(ms)=>{
     setTimeout(() => resolve(ms), ms)
   })
 }
-function checkEmails() {
-  let handledUids=[]
-  if (fs.existsSync(HANDLED_EMAILS)) {
-         handledUids = JSON.parse(fs.readFileSync(HANDLED_EMAILS, 'utf8'));
-  }else{
-    handledUids=[]
-  }
-  // handledUids=filterLast10Hours(handledUids)
-  let alreadyUids=handledUids.map(item=>(item.uid))
 
+let imap 
+let tt=false
+const connectImap=()=>{
+  function openInbox(imap, cb) {
+    imap.openBox("INBOX", false, cb);
+  }
+
+  imap = new Imap(imapConfig);
 
   
-  imap.search(["UNSEEN",['SINCE', getFormattedDates().yesterday],fromEmailString], function (err, results) {
-    console.log(err)
-    console.log(results)
-    if (err || !results.length){
 
-    }else {
-   
-      const fetch = imap.fetch(results, { bodies: "" });
-
-      fetch.on("message", function (msg) {
-        let uid;
-        msg.on('attributes', function (attrs) {
-          uid = attrs.uid; // Store the UID for later use
-        });
-
-        msg.on("body", function (stream) {
-          simpleParser(stream, async (err, parsed) => {
-            if (err) return;
-            let { from, subject,messageId,text } = parsed;
-            text=removeEmailNoticeAndDashes(text)
-            // console.log(text)
-            // console.log(messageId)
-            if(alreadyUids.includes(uid)){
-              console.log('Already handled')
-            
-            }else{
-                if(subject.includes(subJectString)){
-                let fromEmail=from.value[0].address
-                let link=extractSeacardLinks(text)
-                console.log(link)
-                let quoteId=extractQuoteId(subject)
-                console.log(fromEmail, subject,quoteId)
-                let sendObj={getScrnShot:true,email:fromEmail,subject,url:link[0],uid,quoteId,messageId,text}
-                let send= await Promise.race([runBrowserScreenshot(sendObj),sleep(150000)])
-                // console.log(send)
-              // sendMessage(JSON.stringify(sendObj))
-              
-            }
-            }
-            
-            
-          })
-        })
-      
-      })
+  function checkEmails() {
+    let handledUids=[]
+    if (fs.existsSync(HANDLED_EMAILS)) {
+           handledUids = JSON.parse(fs.readFileSync(HANDLED_EMAILS, 'utf8'));
+    }else{
+      handledUids=[]
     }
-
+    // handledUids=filterLast10Hours(handledUids)
+    let alreadyUids=handledUids.map(item=>(item.uid))
+  
+  
     
-  })
+    imap.search(["UNSEEN",['SINCE', getFormattedDates().yesterday],fromEmailString], function (err, results) {
+      console.log(err)
+      console.log(results)
+      if (err || !results.length){
+  
+      }else {
+     
+        const fetch = imap.fetch(results, { bodies: "" });
+  
+        fetch.on("message", function (msg) {
+          let uid;
+          msg.on('attributes', function (attrs) {
+            uid = attrs.uid; // Store the UID for later use
+          });
+  
+          msg.on("body", function (stream) {
+            simpleParser(stream, async (err, parsed) => {
+              if (err) return;
+              let { from, subject,messageId,text } = parsed;
+              text=removeEmailNoticeAndDashes(text)
+              // console.log(text)
+              // console.log(messageId)
+              if(alreadyUids.includes(uid)){
+                console.log('Already handled')
+              
+              }else{
+                  if(subject.includes(subJectString)){
+                  let fromEmail=from.value[0].address
+                  let link=extractSeacardLinks(text)
+                  console.log(link)
+                  let quoteId=extractQuoteId(subject)
+                  console.log(fromEmail, subject,quoteId)
+                  let sendObj={getScrnShot:true,email:fromEmail,subject,url:link[0],uid,quoteId,messageId,text}
+                  let send= await Promise.race([runBrowserScreenshot(sendObj),sleep(150000)])
+                  // console.log(send)
+                // sendMessage(JSON.stringify(sendObj))
+                
+              }
+              }
+              
+              
+            })
+          })
+        
+        })
+      }
+  
+      
+    })
+  }
+
+  let intervalId=setInterval(() => {
+    checkEmails();
+  }, 45000);
+
+  imap.once("ready", function () {
+   
+    openInbox(imap, function (err, box) {
+      if (err) throw err;
+      console.log("Connected to mailbox");
+      imap.on("mail", function (ee) {
+        console.log('Mail recieved')
+        console.log(ee)
+        clearInterval(intervalId);
+        intervalId=setInterval(() => {
+          checkEmails();
+        }, 45000);
+        checkEmails();
+      });
+    });
+  });
+
+  imap.once("error", function (err) {
+    console.error(err);
+  });
+  
+  imap.once("end", function () {
+    // console.log("Connection ended,retrying...");
+    console.log("Connection ended,retrying...");
+    connectImap()
+  });
+  
+  imap.connect();
+
+  // if(!tt){
+  //   tt=true
+  //   setTimeout(()=>{
+  //     console.log('Triggering timeout')
+  //     imap.end()
+  //   },15000)
+  // }
+  
+
+
 }
 
-imap.once("error", function (err) {
-  console.error(err);
-});
+connectImap()
 
-imap.once("end", function () {
-  console.log("Connection ended,retrying...");
-  imap.connect();
-});
 
-imap.connect();
+
+
+
+
+
+
+
+
+
 
 
 function saveScreenshot(base64Data) {
