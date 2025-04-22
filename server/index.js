@@ -36,6 +36,9 @@ let screenShotUrl='https://seacardsys.com/cgi-bin/oms_supp_quote_search'
 let COOKIES_FILE='./cookies.json'
 let HANDLED_EMAILS='./handled.json'
 
+let searcard_username = process.env.searcard_username
+let seacard_password = process.env.seacard_password
+
 function extractSeacardLinks(emailText) {
     const pattern = /https:\/\/seacardsys\.com[^\s]+/g;
     return emailText.match(pattern) || [];
@@ -86,19 +89,19 @@ const runBrowserScreenshot=async(itemObj)=>{
           const usernameSelector = 'input.Username' 
           const passwordSelector = "input.Password"; 
           const submitButtonSelector = "input[type='Submit']"
-          // await page.locator('input.Username').fill("kevin.alameda")
-          // await page.locator("input.Password").fill("Bunkers2025!@")
+          // await page.locator('input.Username').fill(searcard_username)
+          // await page.locator("input.Password").fill(seacard_password)
 
           await sleep(1000)
 
-          await Promise.race([page.locator('input#FW_LOGIN_USERNAME').fill("kevin.alameda"),page.locator('input.Username').fill("kevin.alameda")])
-          await Promise.race([page.locator('input#FW_LOGIN_PASSWORD').fill("Bunkers2025!@"),page.locator("input.Password").fill("Bunkers2025!@")])
+          await Promise.race([page.locator('input#FW_LOGIN_USERNAME').fill(searcard_username),page.locator('input.Username').fill(searcard_username)])
+          await Promise.race([page.locator('input#FW_LOGIN_PASSWORD').fill(seacard_password),page.locator("input.Password").fill(seacard_password)])
 
           await sleep(1000)
           
 
-           // await page.type(usernameSelector, "kevin.alameda", { delay: 100 }); // Typing with a delay for realism
-            // await page.type(passwordSelector, "Bunkers2025!@", { delay: 100 });
+           // await page.type(usernameSelector, searcard_username, { delay: 100 }); // Typing with a delay for realism
+            // await page.type(passwordSelector, seacard_password, { delay: 100 });
  
  
  const submitButtonSelector2='input#FW_LOGIN_LOGIN'
@@ -251,8 +254,8 @@ const runPupet=async(url)=>{
         const usernameSelector = 'input.Username' 
         const passwordSelector = "input.Password"; 
         const submitButtonSelector = "input[type='Submit']"
-         await page.type(usernameSelector, "kevin.alameda", { delay: 100 }); // Typing with a delay for realism
-          await page.type(passwordSelector, "Bunkers2025!@", { delay: 100 });
+         await page.type(usernameSelector, searcard_username, { delay: 100 }); // Typing with a delay for realism
+          await page.type(passwordSelector, seacard_password, { delay: 100 });
         await Promise.all([
                 page.click(submitButtonSelector),
                 page.waitForNavigation({ waitUntil: 'networkidle2' })
@@ -273,7 +276,7 @@ const runPupet=async(url)=>{
     const quoteSearchInput = "input#QUOTE_SEARCH_QUOTE_ID"
     const searchBtn = "input[value='Search']"; 
 
-    // await page.type(quoteSearchInput, "Bunkers2025!@", { delay: 100 });
+    // await page.type(quoteSearchInput, seacard_password, { delay: 100 });
     //     await Promise.all([
     //             page.click(submitButtonSelector),
     //             page.waitForNavigation({ waitUntil: 'networkidle2' })
@@ -359,12 +362,12 @@ wss.on('connection',function connections(ws){
 
 const PORT = 3000;
 
-console.log(process.env.first_email)
-console.log(process.env.first_email_pwd)
+console.log(process.env.receiving_email)
+console.log(process.env.receiving_email_pwd)
 
 const imapConfig = {
-  user:process.env.first_email,
-  password: process.env.first_email_pwd,
+  user:process.env.receiving_email,
+  password: process.env.receiving_email_pwd,
   host: "imap.gmail.com",
   port: 993,
   tls: true,
@@ -595,15 +598,15 @@ async function sendEmail(attachmentPath,messageObj) {
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user:process.env.first_email,
-      pass: process.env.first_email_pwd
+      user:process.env.receiving_email,
+      pass: process.env.receiving_email_pwd
     },
   });
 
 // console.log(email,subject,uid,messageId,text)
 const emailText = text.replace(/\n/g, '<br>');
   let mailOptions = {
-    from: process.env.first_email,
+    from: process.env.receiving_email,
     to: email,
     inReplyTo: messageId,
     subject: `${subject}`,
