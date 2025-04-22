@@ -36,7 +36,7 @@ let screenShotUrl='https://seacardsys.com/cgi-bin/oms_supp_quote_search'
 let COOKIES_FILE='./cookies.json'
 let HANDLED_EMAILS='./handled.json'
 
-let searcard_username = process.env.searcard_username
+let searcard_username = process.env.seacard_username
 let seacard_password = process.env.seacard_password
 
 function extractSeacardLinks(emailText) {
@@ -89,6 +89,8 @@ const runBrowserScreenshot=async(itemObj)=>{
           const usernameSelector = 'input.Username' 
           const passwordSelector = "input.Password"; 
           const submitButtonSelector = "input[type='Submit']"
+
+          console.log('Trying with',searcard_username,seacard_password)
           // await page.locator('input.Username').fill(searcard_username)
           // await page.locator("input.Password").fill(seacard_password)
 
@@ -254,6 +256,7 @@ const runPupet=async(url)=>{
         const usernameSelector = 'input.Username' 
         const passwordSelector = "input.Password"; 
         const submitButtonSelector = "input[type='Submit']"
+        console.log('Attempt with',seacard_password,searcard_username)
          await page.type(usernameSelector, searcard_username, { delay: 100 }); // Typing with a delay for realism
           await page.type(passwordSelector, seacard_password, { delay: 100 });
         await Promise.all([
