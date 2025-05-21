@@ -439,14 +439,21 @@ const connectImap=()=>{
   
 
   function checkEmails() {
-    let handledUids=[]
-    if (fs.existsSync(HANDLED_EMAILS)) {
-           handledUids = JSON.parse(fs.readFileSync(HANDLED_EMAILS, 'utf8'));
-    }else{
-      handledUids=[]
-    }
-    // handledUids=filterLast10Hours(handledUids)
-    let alreadyUids=handledUids.map(item=>(item.uid))
+    
+
+     if (!imap || imap.state !== 'authenticated' || !imap._box) {
+        console.warn('IMAP not ready — skipping checkEmails');
+        return;
+      }
+
+      let handledUids=[]
+      if (fs.existsSync(HANDLED_EMAILS)) {
+            handledUids = JSON.parse(fs.readFileSync(HANDLED_EMAILS, 'utf8'));
+      }else{
+        handledUids=[]
+      }
+      // handledUids=filterLast10Hours(handledUids)
+      let alreadyUids=handledUids.map(item=>(item.uid))
   
   
     
@@ -523,13 +530,22 @@ const connectImap=()=>{
   });
 
   imap.once("error", function (err) {
+    console.log("Connection errored,retrying...");
+    if (intervalId){
+      clearInterval(intervalId);
+    }
+    
     console.error(err);
+    setTimeout(connectImap,6000)
   });
   
   imap.once("end", function () {
-    // console.log("Connection ended,retrying...");
     console.log("Connection ended,retrying...");
-    connectImap()
+    if (intervalId){
+      clearInterval(intervalId);
+    }
+    setTimeout(connectImap,3000)
+    
   });
   
   imap.connect();
